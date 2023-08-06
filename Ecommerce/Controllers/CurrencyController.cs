@@ -5,6 +5,7 @@ using Ecommerce.DTO.Models;
 using Ecommerce.DTO.Models.Common;
 using Ecommerce.Services.Interfaces.Unit;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Ecommerce.Controllers
 {
@@ -56,17 +57,33 @@ namespace Ecommerce.Controllers
         [CheckJwt(Allows = new AccountType[] { AccountType.Admin, AccountType.Seller })]
         public ActionResult<PagedResponse<List<CurrencyResponse>>> GetCurrencies(int? pageSize, int? pageIndex)
         {
-            return Ok(new ResponseWrapper<List<CurrencyResponse>>
+            var currencies = _service.Currency.GetCurrencies();
+
+            var res = new PagedResponse<List<CurrencyResponse>>
             {
                 Message = MessageHelper.SuccessfullyGet,
                 Success = true,
-                Data = _service.Currency.GetCurrencies().Select(s => new CurrencyResponse()
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Symbol = s.CurrencySymbol
-                }).ToList()
-            });
+                PageNumber = pageIndex.GetValueOrDefault(),
+                PageSize = pageSize.GetValueOrDefault(),
+                TotalRecords = currencies.Count(),
+                Data = new List<CurrencyResponse>()
+            };
+
+
+
+            if (pageIndex.HasValue && pageSize.HasValue && pageSize.Value > 0)
+            {
+                res.TotalPages = (int)Math.Ceiling(currencies.Count() / (double)pageSize.Value);
+                currencies = currencies.Skip(pageIndex.Value * pageSize.Value).Take(pageSize.Value);
+            }
+            res.Data = currencies.Select(s => new CurrencyResponse()
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Symbol = s.CurrencySymbol
+            }).ToList();
+
+            return Ok(res);
         }
 
         #endregion GET

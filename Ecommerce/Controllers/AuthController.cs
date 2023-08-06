@@ -51,7 +51,7 @@ namespace Ecommerce.Controllers
             if (seller == null)
                 return Unauthorized(new ResponseWrapper<object>(false, "Invalid username or password", null, null));
 
-            var jwtToken = TokenManger.GenerateToken(seller.Id, AccountType.Seller);
+            var jwtToken = TokenManger.GenerateToken(seller.Id, AccountType.Admin);
 
             return Ok(new ResponseWrapper<LoginResponse<UserResponse>>()
             {
@@ -71,18 +71,36 @@ namespace Ecommerce.Controllers
         public ActionResult<ResponseWrapper<LoginResponse<SellerResponse>>> Current()
         {
             var token = _converter.GetAdminToken(HttpContext);
-            var account = _service.Seller.GetSeller(token.Id);
-
-            return Ok(new ResponseWrapper<LoginResponse<SellerResponse>>()
+            if (token.Type == AccountType.Seller)
             {
-                Data = new LoginResponse<SellerResponse>()
+                var account = _service.Seller.GetSeller(token.Id);
+
+                return Ok(new ResponseWrapper<LoginResponse<SellerResponse>>()
                 {
-                    Role = token.Type.ToString(),
-                    User = _converter.GetSellerResponse(account)
-                },
-                Message = "Successfully Login",
-                Success = true,
-            });
+                    Data = new LoginResponse<SellerResponse>()
+                    {
+                        Role = token.Type.ToString(),
+                        User = _converter.GetSellerResponse(account)
+                    },
+                    Message = "Successfully Login",
+                    Success = true,
+                });
+            }
+            else
+            {
+                var account = _service.User.GetUser(token.Id);
+
+                return Ok(new ResponseWrapper<LoginResponse<UserResponse>>()
+                {
+                    Data = new LoginResponse<UserResponse>()
+                    {
+                        Role = token.Type.ToString(),
+                        User = _converter.GetUserResponse(account)
+                    },
+                    Message = "Successfully Login",
+                    Success = true,
+                });
+            }
         }
     }
 }
