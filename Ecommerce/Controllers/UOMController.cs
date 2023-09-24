@@ -55,18 +55,33 @@ namespace Ecommerce.Controllers
 
         [HttpGet]
         [Route("")]
-        public ActionResult<ResponseWrapper<List<UOMResponse>>> GetUOMs()
+        [CheckJwt(Allows = new AccountType[] { AccountType.Admin, AccountType.Seller })]
+        public ActionResult<PagedResponse<List<UOMResponse>>> GetUOMs(int? pageSize, int? pageIndex)
         {
-            return Ok(new ResponseWrapper<List<UOMResponse>>
+            var uoms = _service.UOM.GetUOMs();
+
+            var res = new PagedResponse<List<UOMResponse>>
             {
                 Message = MessageHelper.SuccessfullyGet,
                 Success = true,
-                Data = _service.UOM.GetUOMs().Select(s => new UOMResponse()
-                {
-                    Id = s.Id,
-                    Title = s.Title,
-                }).ToList()
-            });
+                PageNumber = pageIndex.GetValueOrDefault(),
+                PageSize = pageSize.GetValueOrDefault(),
+                TotalRecords = uoms.Count(),
+                Data = new List<UOMResponse>()
+            };
+            if (pageIndex.HasValue && pageSize.HasValue && pageSize.Value > 0)
+            {
+                res.TotalPages = (int)Math.Ceiling(uoms.Count() / (double)pageSize.Value);
+                uoms = uoms.Skip(pageIndex.Value * pageSize.Value).Take(pageSize.Value);
+            }
+
+            res.Data = uoms.Select(s => new UOMResponse()
+            {
+                Id = s.Id,
+                Title = s.Title,
+            }).ToList();
+
+            return Ok(res);
         }
 
         #endregion GET

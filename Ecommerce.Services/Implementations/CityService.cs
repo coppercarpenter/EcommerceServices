@@ -55,7 +55,7 @@ namespace Ecommerce.Services.Implementations
             if (GetCities().Any(a => a.Name.Equals(name) && a.Country_Id == country_Id))
                 throw new AlreadyExistException("City");
 
-            if (_repo.Country.AnyCountry(country_Id))
+            if (!_repo.Country.AnyCountry(country_Id))
                 throw new NotFoundException("Country");
 
             var city = new City

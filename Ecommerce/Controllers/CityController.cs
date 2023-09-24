@@ -78,6 +78,8 @@ namespace Ecommerce.Controllers
 
             var res = new PagedResponse<List<CityResponse>>
             {
+                PageNumber = pageIndex.GetValueOrDefault(),
+                PageSize = pageSize.GetValueOrDefault(),
                 Message = MessageHelper.SuccessfullyGet,
                 Success = true,
                 Data = new List<CityResponse>(),
