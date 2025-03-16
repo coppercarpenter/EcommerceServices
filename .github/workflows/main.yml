@@ -1,0 +1,15 @@
+name: Build
+
+
+on:
+  push:
+    branches: main
+
+jobs:
+  Build-App:
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet restore
+    
+    
+    
